@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GamezOS</title>
+<style>
+:root{color-scheme:dark;--bg:#070a1a;--ink:#f2f4ff;--dim:#9aa3c7;--glass:rgba(255,255,255,.08);--line:rgba(255,255,255,.22);--a:#7c5cff;--b:#ff4fa3;--c:#2fd8ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Outfit","Segoe UI",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px solid var(--c);outline-offset:4px}
+.bg{position:fixed;inset:0;background:radial-gradient(1200px 600px at 20% -10%,color-mix(in srgb,var(--a) 45%,transparent),transparent 60%),radial-gradient(900px 500px at 90% 110%,color-mix(in srgb,var(--b) 28%,transparent),transparent 60%),var(--bg);transition:background .6s}
+.bg::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.55) 1px,transparent 1.5px);background-size:90px 90px;opacity:.18;mask-image:linear-gradient(transparent,#000 70%)}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;padding:28px 40px}
+.screen.on{display:flex}
+.clock{position:absolute;top:calc(24px + env(safe-area-inset-top,0px));right:40px;font-size:1.05rem;font-weight:500;letter-spacing:.02em}
+/* login */
+#login{align-items:center;justify-content:center;text-align:center}
+#login h1{font-size:clamp(1.8rem,4.5vw,2.8rem);font-weight:300;letter-spacing:.01em}
+#login p{color:var(--dim);margin-top:10px}
+.users{display:flex;gap:56px;margin-top:64px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.user{display:flex;flex-direction:column;align-items:center;gap:14px;width:150px;transition:transform .2s}
+.user:hover,.user:focus-visible{transform:scale(1.06)}
+.ring{width:132px;height:132px;border-radius:50%;padding:6px;border:2px solid var(--line);display:grid;place-items:center;transition:border-color .2s,box-shadow .2s}
+.user.sel .ring,.user:hover .ring{border-color:#fff;box-shadow:0 0 0 4px rgba(124,92,255,.35),0 0 40px rgba(124,92,255,.5)}
+.av{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:2.4rem;background:conic-gradient(from 200deg,var(--a),var(--b),var(--c),var(--a))}
+.av.add{background:var(--glass);font-weight:300;font-size:3rem}
+.name{font-size:1rem}
+.opt{font-size:.8rem;color:var(--dim)}
+.power{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:var(--glass);display:grid;place-items:center}
+.hint{position:absolute;bottom:calc(34px + env(safe-area-inset-bottom,0px));right:40px;font-size:.85rem;color:var(--dim)}
+.adder{display:none;margin-top:36px;gap:10px;justify-content:center}
+.adder.on{display:flex}
+.adder input{background:var(--glass);border:1px solid var(--line);color:var(--ink);padding:12px 16px;border-radius:12px;font:inherit;width:220px}
+.adder button{background:linear-gradient(90deg,var(--a),var(--b));padding:12px 20px;border-radius:12px;font-weight:600}
+/* home */
+.top{display:flex;align-items:center;gap:26px;height:44px;margin-right:150px}
+.tab{font-size:1.25rem;color:var(--dim);padding-bottom:4px;border-bottom:3px solid transparent}
+.tab.on{color:var(--ink);border-color:var(--ink);font-weight:600}
+.tools{margin-left:auto;display:flex;gap:18px;align-items:center}
+.mini{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:.9rem;font-weight:700;background:conic-gradient(from 200deg,var(--a),var(--b),var(--c),var(--a))}
+.icon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--glass)}
+.shelf{display:flex;gap:14px;margin-top:36px;align-items:flex-end;overflow-x:auto;padding:14px 6px 8px;scrollbar-width:none}
+.shelf::-webkit-scrollbar{display:none}
+.tile{flex:0 0 auto;width:68px;height:68px;border-radius:16px;position:relative;display:grid;place-items:center;font-size:1.5rem;background:var(--glass);transition:all .25s;overflow:hidden}
+.tile.game{background:var(--g)}
+.tile.on{width:128px;height:128px;box-shadow:0 0 0 3px #fff,0 18px 50px rgba(0,0,0,.6)}
+.tile:hover:not(.on){transform:translateY(-4px)}
+.tl{margin:10px 6px 0;color:var(--dim);font-size:.95rem;height:1.4em}
+.hero{margin-top:auto;display:flex;align-items:flex-end;gap:40px;padding-bottom:30px}
+.info{max-width:520px}
+.logo{font-size:clamp(2.4rem,6vw,4.4rem);font-weight:800;line-height:.95;letter-spacing:-.02em;font-style:italic}
+.tag{color:var(--dim);margin-top:14px;font-size:1.05rem}
+.acts{display:flex;gap:12px;margin-top:22px;align-items:center}
+.play{background:#fff;color:#0a0d22;padding:14px 56px;border-radius:999px;font-weight:700;font-size:1.05rem}
+.more{width:48px;height:48px;border-radius:50%;background:var(--glass);font-size:1.3rem}
+.side{margin-left:auto;display:flex;flex-direction:column;gap:12px;align-items:stretch;width:220px}
+.cover{height:260px;border-radius:14px;background:var(--g);padding:16px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.cover b{font-size:1.5rem;font-style:italic;line-height:1}
+.cover span{font-size:.8rem;margin-top:6px;background:rgba(0,0,0,.45);align-self:flex-start;padding:3px 10px;border-radius:6px}
+.trophy{display:flex;justify-content:space-between;background:var(--glass);border-radius:12px;padding:12px 16px;font-size:.85rem;color:var(--dim)}
+.trophy strong{display:block;color:var(--ink);font-size:1rem}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:rgba(20,24,52,.95);border:1px solid var(--line);padding:12px 22px;border-radius:12px;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.cursor{display:none!important}
+.cursor{position:fixed;left:0;top:0;z-index:999;pointer-events:none;opacity:0;transition:opacity .2s}
+.cursor.show{opacity:1}
+.cursor i{display:block;width:24px;height:24px;margin:-12px 0 0 -12px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 16px var(--a),0 0 4px #fff inset;transition:transform .18s,background .18s}
+.cursor i::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#fff}
+.cursor.point i{transform:scale(1.8);background:rgba(124,92,255,.35);animation:pulse 1s infinite}
+.cursor.down i{transform:scale(.7);background:rgba(47,216,255,.5);animation:none}
+@keyframes pulse{50%{box-shadow:0 0 30px var(--c),0 0 4px #fff inset}}
+.rip{position:fixed;width:20px;height:20px;border:2px solid var(--c);border-radius:50%;pointer-events:none;z-index:998;animation:rip .6s ease-out forwards}
+@keyframes rip{from{transform:translate(-50%,-50%) scale(1);opacity:.9}to{transform:translate(-50%,-50%) scale(7);opacity:0}}
+#login.leaving{opacity:0;transition:opacity .5s .2s}
+#login.leaving .user.sel{transform:scale(1.7)}
+#login.leaving .user:not(.sel){opacity:0;transition:opacity .3s}
+.screen.enter{animation:rise .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:none}}
+.lockup{display:flex;align-items:center;gap:16px}
+.emb svg{width:64px;height:64px}
+.tile svg{width:58%;height:58%}
+.cemb svg{width:44px;height:44px;margin-bottom:10px}
+.launch{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(800px 500px at 50% 40%,rgba(124,92,255,.4),transparent 70%),var(--bg);opacity:0;pointer-events:none;transition:opacity .4s}
+.launch.on{opacity:1;pointer-events:all}
+.lemb svg{width:104px;height:104px;filter:drop-shadow(0 0 24px var(--b))}
+.launch.on .lemb{animation:pop .8s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.ltitle{font-size:clamp(2rem,6vw,3.6rem);font-weight:800;font-style:italic}
+.lbar{width:260px;height:4px;background:var(--glass);border-radius:4px;overflow:hidden}
+.lbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b))}
+.launch.on .lbar i{animation:load 2.2s ease-in-out forwards}
+@keyframes load{to{width:100%}}
+.launch p{color:var(--dim)}
+.dlg{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(4,6,16,.7);backdrop-filter:blur(8px)}
+.dlg.on{display:flex}
+.panel{width:min(420px,92vw);background:rgba(20,24,52,.96);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1);max-height:90vh;overflow:auto}
+.panel h2{font-weight:600;font-size:1.5rem}
+.panel .ring{width:112px;height:112px}
+.lb{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;color:var(--dim);font-size:.9rem}
+.lb input{background:var(--glass);border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:12px;font:inherit}
+.sw{display:flex;gap:10px}
+.dot{width:32px;height:32px;border-radius:50%;border:2px solid transparent}
+.dot.on{border-color:#fff;box-shadow:0 0 14px var(--a)}
+.row{display:flex;gap:10px;width:100%}.row>*{flex:1}
+.col{display:flex;flex-direction:column;gap:10px;width:100%}
+.b1,.b2{padding:12px 16px;border-radius:12px;font-weight:600}
+.b1{background:linear-gradient(90deg,var(--a),var(--b))}
+.b2{background:var(--glass);border:1px solid var(--line)}
+.sub{color:var(--dim);font-size:.9rem;line-height:1.5}
+.opt:hover{color:#fff}
+.toast{z-index:700}
+#exp{z-index:60;background:var(--bg);overflow-y:auto;padding:0;display:none}
+#exp.on{display:block}
+#exp .back{position:fixed;top:calc(24px + env(safe-area-inset-top,0px));right:40px;z-index:5;background:rgba(0,0,0,.4);padding:8px 16px;border-radius:999px;color:#fff}
+.xhero{position:relative;min-height:70vh;overflow:hidden;background:linear-gradient(180deg,#1d0b3d 0%,#7a1f6b 50%,#ff8a4c 100%);display:flex;align-items:flex-end}
+.xhero::after{content:"";position:absolute;inset:auto 0 0 0;height:30%;background:linear-gradient(transparent,var(--bg))}
+.duo{position:absolute;right:2%;bottom:0;width:min(760px,92%);height:100%}
+.xt{position:relative;z-index:2;padding:0 48px 64px;max-width:620px}
+.xt h1{font-size:clamp(2.4rem,7vw,5rem);font-weight:800;font-style:italic;line-height:.95;letter-spacing:-.02em}
+.xt p{margin-top:16px;font-size:1.1rem;line-height:1.5;color:#ffe9f3}
+.xt small{display:block;margin-top:14px;color:#f3c9de;font-size:.8rem}
+.xbody{max-width:1040px;margin:0 auto;padding:10px 40px 80px;display:grid;gap:22px}
+.xbody h2{font-size:1.5rem;font-weight:600;margin-bottom:14px}
+.xc{background:var(--glass);border-radius:16px;padding:24px}
+.xg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.xs{background:rgba(255,255,255,.06);border-radius:12px;padding:16px}
+.xs b{display:block;font-size:1.5rem;margin-bottom:4px}
+.xs span{color:var(--dim);font-size:.9rem;line-height:1.45}
+.chr{border-radius:14px;padding:20px;line-height:1.5;color:#fff}
+.chr h3{font-size:1.4rem;margin-bottom:4px}
+.chr em{display:block;margin-bottom:10px;opacity:.85;font-style:normal;font-size:.9rem}
+.jas{background:linear-gradient(135deg,#0b5f7a,#1b2a6b)}
+.luc{background:linear-gradient(135deg,#b3245f,#6b2a9b)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chips span{background:rgba(255,255,255,.1);padding:7px 14px;border-radius:999px;font-size:.9rem}
+.mapw{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:24px;align-items:start}
+#xmap svg{width:100%;background:#0c1030;border-radius:12px}
+.rg{fill:color-mix(in srgb,var(--a) 28%,#1b1f4a);stroke:rgba(255,255,255,.4);stroke-width:1.5;cursor:pointer;transition:fill .2s}
+.rg:hover{fill:color-mix(in srgb,var(--a) 55%,#1b1f4a)}
+.rg.on{fill:var(--b)}
+.lake{fill:#17508c}
+.rt{fill:#fff;font-size:11px;pointer-events:none;text-anchor:middle}
+.rls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.rl{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.9rem}
+.rl.on{background:linear-gradient(90deg,var(--a),var(--b))}
+#rd p{color:var(--dim);line-height:1.55;margin-top:8px}
+#rd b{font-size:1.2rem}
+.note{color:var(--dim);font-size:.85rem;line-height:1.5}
+.scene{position:absolute;inset:0;width:100%;height:100%}
+.xhero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,6,31,.8),transparent 62%);z-index:1}
+.row2{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.xt .b2{background:rgba(0,0,0,.4)}
+.rl.alt{background:transparent;border:1px dashed rgba(255,255,255,.4)}
+.rl.alt.on{border-style:solid}
+#xmi{width:100%;border-radius:12px;display:block}
+.sri{text-align:left;line-height:1.35}
+.sri small{color:var(--dim);font-weight:400}
+.gbg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.gbg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,10,26,.88),rgba(7,10,26,.25) 60%,transparent),linear-gradient(0deg,var(--bg),transparent 45%)}
+.gbg svg{animation:fadein .6s}
+@keyframes fadein{from{opacity:0}}
+#home>:not(.gbg){position:relative;z-index:1}
+.w1{display:block;font-size:.4em;letter-spacing:.35em;font-weight:600;margin-bottom:.2em}
+.w2{display:block;background:linear-gradient(90deg,#fff,var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px var(--c2))}
+.clogo{max-height:110px;max-width:min(360px,70vw);filter:drop-shadow(0 4px 18px rgba(0,0,0,.6))}
+.price{text-align:center;margin-top:-4px;font-weight:600}
+.cinov{position:fixed;inset:0;z-index:650;pointer-events:none;display:flex;align-items:center;justify-content:center;visibility:hidden;overflow:hidden}
+.cinov.on{visibility:visible}
+.cinov i{position:absolute;left:0;right:0;height:0;background:#000}
+.cinov i:first-child{top:0}
+.cinov i:nth-child(2){bottom:0}
+.cinov.on i{animation:bars 1.6s cubic-bezier(.7,0,.3,1) forwards}
+@keyframes bars{0%{height:0}25%,70%{height:16vh}100%{height:0}}
+.cinov b{position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-100%)}
+.cinov.on b{animation:sweep 1.2s .1s ease-in-out forwards}
+@keyframes sweep{to{transform:translateX(100%)}}
+.cinov span{position:relative;font-size:clamp(1.6rem,5vw,3rem);font-weight:300;letter-spacing:.08em;opacity:0;text-shadow:0 0 30px var(--a)}
+.cinov.on span{animation:ttl 1.6s forwards}
+@keyframes ttl{0%{opacity:0;letter-spacing:.4em;transform:scale(1.1)}30%,65%{opacity:1;letter-spacing:.08em;transform:none}100%{opacity:0;transform:scale(.96)}}
+.user.sel .ring{animation:ringpop .45s}
+@keyframes ringpop{0%{transform:scale(.9)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+#home.cin .gbg{animation:kb 1.3s ease-out both}
+@keyframes kb{from{opacity:0;transform:scale(1.12)}to{opacity:1;transform:none}}
+#home.cin .lockup{animation:logoIn .9s cubic-bezier(.2,.8,.2,1) both}
+#home.cin .tag,#home.cin .acts{animation:slideUp .7s .15s cubic-bezier(.2,.8,.2,1) both}
+#home.cin .acts{animation-delay:.25s}
+#home.cin .side{animation:slideIn .8s .1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes logoIn{from{opacity:0;filter:blur(14px);transform:scale(1.18) translateY(10px)}to{opacity:1;filter:none;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(60px) rotateY(-12deg)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cinov,.cinov *,#home.cin,#home.cin *,.user.sel .ring{animation:none!important}}
+.nf{font-size:1.7rem;font-weight:800;letter-spacing:.04em;color:var(--b);padding:22px 0}
+@media(max-width:700px){.xt{padding:0 20px 48px}.xbody{padding:10px 20px 60px}.mapw{grid-template-columns:1fr}#exp .back{right:16px}.duo{opacity:.6}}
+.play{border:2px solid transparent;transition:transform .2s,box-shadow .2s,background .2s,color .2s}
+.play:hover,.play:focus-visible{background:linear-gradient(90deg,var(--a),var(--b));color:#fff;border-color:#fff;box-shadow:0 0 0 4px var(--c),0 0 32px var(--a);transform:scale(1.06)}
+#sys{z-index:50;background:rgba(7,10,26,.97);flex-direction:row;padding:0;overflow:hidden}
+.side2{width:340px;flex:0 0 340px;padding:44px 0 40px 44px;display:flex;flex-direction:column;overflow:auto}
+.side2 h1{font-size:1.9rem;font-weight:400;margin-bottom:26px}
+.mi{display:block;width:100%;text-align:left;font-size:1.2rem;padding:13px 20px;color:#5b6388;border-radius:10px 0 0 10px;transition:color .2s,background .2s}
+.mi:hover{color:var(--ink)}
+.mi.on{color:var(--ink);background:linear-gradient(90deg,var(--glass),transparent)}
+.main2{flex:1;padding:110px 60px 40px 30px;position:relative;overflow:auto}
+.back{position:absolute;top:44px;right:60px;color:var(--dim);font-size:1rem}
+.back:hover{color:var(--ink)}
+.ph{display:flex;justify-content:space-between;gap:30px;align-items:flex-start}
+.ph h2{font-size:1.3rem;font-weight:500}
+.ph p{color:var(--dim);margin-top:8px;max-width:440px;line-height:1.5}
+.dd{position:relative;width:240px;flex:0 0 240px}
+.ddb{width:100%;display:flex;justify-content:space-between;padding:12px 18px;background:#14183a;border:1px solid var(--line);border-radius:6px}
+.ddl{position:absolute;top:100%;right:0;width:100%;background:#12163a;border:1px solid var(--line);margin-top:4px;display:none;z-index:5}
+.ddl.on{display:block}
+.ddl button{display:block;width:100%;text-align:left;padding:13px 18px 13px 44px;position:relative}
+.ddl button.cur::before{content:"✓";position:absolute;left:18px}
+.ddl button:hover,.ddl button:focus-visible{box-shadow:inset 0 0 0 1px #fff}
+.pvw{margin-top:56px;display:flex;gap:20px;padding:14px;background:rgba(255,255,255,.05);border-radius:8px;max-width:760px}
+.pp{flex:1;height:190px;border-radius:6px;position:relative;overflow:hidden;padding:12px}
+.pp.h{background:radial-gradient(120% 90% at 15% 0%,color-mix(in srgb,var(--a) 60%,transparent),transparent 70%),radial-gradient(90% 80% at 100% 100%,color-mix(in srgb,var(--b) 40%,transparent),transparent 70%),var(--bg)}
+.pp.s{background:color-mix(in srgb,var(--bg) 75%,#666)}
+.pc{position:absolute;top:10px;right:12px;font-size:.65rem}
+.pt{display:flex;gap:6px;margin-top:50px;align-items:flex-end}
+.pt b{width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.14)}
+.pt b:first-child{width:38px;height:38px;box-shadow:0 0 0 2px #fff;background:linear-gradient(135deg,var(--a),var(--b))}
+.pn{font-size:.72rem;margin-bottom:10px;color:var(--dim)}
+.pp.h .pn{position:absolute;left:12px;bottom:12px;margin:0;color:#fff;font-weight:700;font-style:italic;font-size:.95rem}
+.ln{display:block;height:16px;margin-top:8px;border-radius:3px;background:rgba(255,255,255,.07)}
+.ln.on{box-shadow:inset 0 0 0 1px var(--c);background:rgba(255,255,255,.14)}
+.rw{display:flex;justify-content:space-between;gap:20px;padding:16px 4px;border-bottom:1px solid rgba(255,255,255,.08);max-width:560px}
+.rw span:last-child{color:var(--dim);text-align:right}
+.col2{margin-top:28px;display:flex;gap:12px}
+@media(max-width:700px){#sys{flex-direction:column;overflow:auto}.side2{width:100%;flex:none;padding:24px 20px 0}#menu{display:flex;overflow-x:auto}.mi{white-space:nowrap;width:auto;border-radius:10px}.main2{padding:20px;overflow:visible}.ph,.pvw{flex-direction:column}.dd{width:100%;flex:none}.back{right:20px;top:26px}}
+@media(max-width:700px){.screen{padding:20px}.users{gap:28px;margin-top:40px}.side{display:none}.clock{right:20px}.top{margin-right:70px}.tl{display:none}.hint{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+<div class="clock" id="clock">--:--</div>
+
+<main class="screen on" id="login">
+  <h1>Welcome back to GamezOS</h1>
+  <p>Who’s using this controller?</p>
+  <div class="users" id="users"></div>
+  <div class="adder" id="adder"><input id="newName" maxlength="14" placeholder="Choose a gamertag" aria-label="Gamertag"><button id="create">Create user</button></div>
+  <button class="power" id="power" aria-label="Power options">⏻</button>
+  <div class="hint">Press Enter to select · ← → to move</div>
+</main>
+
+<main class="screen" id="home"><div class="gbg" id="gbg"></div>
+  <nav class="top">
+    <button class="tab on" data-tab="games">Games</button>
+    <button class="tab" data-tab="media">Media</button>
+    <div class="tools"><button class="icon" aria-label="Search" id="search">⌕</button><button class="icon" aria-label="Settings" id="settings">⚙</button><button class="mini" id="me" aria-label="Switch user">Z</button></div>
+  </nav>
+  <div class="shelf" id="shelf"></div>
+  <div class="tl" id="tl"></div>
+  <section class="hero">
+    <div class="info">
+      <div class="lockup"><span class="emb" id="emb"></span><div class="logo" id="gt">Neon Drift</div></div>
+      <p class="tag" id="gtag"></p>
+      <div class="acts"><button class="play" id="play">Play</button><button class="more" aria-label="More options" id="more">···</button></div>
+    </div>
+    <aside class="side">
+      <div class="cover" id="cover"><div class="cemb" id="cemb"></div><b id="cv"></b><span id="bd">Full game</span></div><div class="price" id="price"></div>
+      <div class="trophy"><div>Progress<strong id="prog">0%</strong></div><div>Earned<strong id="earn">0/0</strong></div></div>
+    </aside>
+  </section>
+</main>
+<div class="cinov" id="cinov"><i></i><i></i><b></b><span id="cint"></span></div>
+<div class="launch" id="launch"><div class="lemb" id="lemb"></div><div class="ltitle" id="ltitle"></div><div class="lbar"><i></i></div><p>Launching…</p></div>
+<main class="screen" id="exp"><button class="back" id="xback">‹ Back</button>
+<header class="xhero">
+<svg class="scene" viewBox="0 0 800 420" preserveAspectRatio="xMaxYMax slice" role="img" aria-label="Illustration of a couple sitting on a car hood in front of art deco hotels and palm trees at sunset"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5f3fa8"/><stop offset=".55" stop-color="#d86fb2"/><stop offset="1" stop-color="#ffb27a"/></linearGradient><pattern id="win" width="22" height="26" patternUnits="userSpaceOnUse"><rect x="5" y="6" width="10" height="12" fill="#8d92d8"/></pattern></defs><rect width="800" height="420" fill="url(#sk)"/><circle cx="250" cy="260" r="110" fill="#ffd9a0" opacity=".45"/><rect x="150" y="170" width="130" height="250" fill="#b5b8ee"/><rect x="150" y="170" width="130" height="250" fill="url(#win)"/><rect x="590" y="120" width="210" height="300" fill="#c7c9f5"/><rect x="590" y="120" width="210" height="300" fill="url(#win)"/><rect x="590" y="112" width="210" height="8" fill="#e9eaff"/><g fill="none" stroke="#6b3a8f" stroke-width="9" stroke-linecap="round" opacity=".7"><path d="M60 420V210M60 210Q100 175 150 200M60 210Q20 170-20 195M60 210Q80 160 125 150"/><path d="M190 420V250M190 250Q225 225 265 245M190 250Q160 225 125 235"/><path d="M720 420V170M720 170Q760 130 810 160M720 170Q680 125 635 150M720 170Q735 115 770 100"/></g><path d="M0 420V300Q130 262 300 272L520 300L580 420Z" fill="#b9b7cf"/><path d="M40 330Q150 292 290 300" stroke="#fff" stroke-opacity=".5" stroke-width="4" fill="none"/><path d="M335 245L420 235L432 332L328 338Z" fill="#5b3f9b"/><path d="M410 265L545 265L565 345L420 350Z" fill="#3e6b4a"/><path d="M352 108Q388 80 415 105Q405 150 395 190Q380 140 352 150Z" fill="#4a2a20"/><circle cx="385" cy="124" r="22" fill="#b8774f"/><path d="M340 152Q385 138 425 156L418 236L335 246Z" fill="#e0489a"/><path d="M420 152Q460 132 482 150L474 172Q448 156 424 176Z" fill="#e0489a"/><path d="M420 152Q472 132 522 152L542 272L405 272Z" fill="#d6e8d4"/><path d="M420 156Q394 212 430 262L452 252Q432 212 442 172Z" fill="#d49a76"/><path d="M522 156Q548 212 520 262L498 252Q518 212 506 172Z" fill="#d49a76"/><rect x="458" y="132" width="24" height="22" rx="8" fill="#d49a76"/><circle cx="470" cy="118" r="26" fill="#d49a76"/><path d="M444 112Q470 82 498 112Q480 98 444 112Z" fill="#2b1d17"/></svg>
+<svg class="duo" hidden viewBox="0 0 600 420" preserveAspectRatio="xMaxYMax meet" role="img" aria-label="Template silhouettes of Jason and Lucia against a Vice City sunset"><defs><linearGradient id="sunG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#ff4fa3"/></linearGradient></defs><circle cx="300" cy="190" r="130" fill="url(#sunG)" opacity=".9"/><g stroke="#12061f" stroke-width="6" stroke-linecap="round" fill="none" opacity=".85"><path d="M40 420V230M40 230Q70 205 110 225M40 230Q10 200-20 215M40 230Q55 190 90 180"/><path d="M560 420V260M560 260Q590 235 630 255M560 260Q530 230 500 245"/></g><g fill="#12061f" stroke="#2fd8ff" stroke-width="2.5"><circle cx="205" cy="150" r="28"/><path d="M150 420L158 240Q164 190 205 186Q246 190 252 240L262 420Z"/></g><g fill="#12061f" stroke="#ff4fa3" stroke-width="2.5"><path d="M338 150Q338 112 372 112Q406 112 406 150L416 232Q372 212 328 232Z"/><circle cx="372" cy="152" r="24"/><path d="M322 420L332 262Q338 206 372 202Q406 206 412 262L422 420Z"/></g><text x="205" y="410" fill="#2fd8ff" font-size="16" font-weight="700" text-anchor="middle">Jason</text><text x="372" y="410" fill="#ff4fa3" font-size="16" font-weight="700" text-anchor="middle">Lucia</text></svg>
+<div class="xt"><h1>Grand Theft Auto VI</h1><p>Out now on PS5 and Xbox Series X|S. Two leads, one state, and an easy score that goes wrong.</p><small>Original illustration inspired by the story. Not official Rockstar artwork.</small><div class="row2"><button class="b2" id="xbg">Use my own image</button><button class="b2" id="xrs">Reset art</button></div><input type="file" id="xf" accept="image/*" hidden></div></header>
+<div class="xbody">
+<section class="xc"><h2>Release</h2><div class="xg"><div class="xs"><b>Nov 19, 2026</b><span>Launched worldwide at midnight local time on PS5 and Xbox Series X|S. No PC version has been announced.</span></div><div class="xs"><b>Two delays</b><span>First aimed at fall 2025, then May 26, 2026, then moved to November 19, 2026 for polish.</span></div><div class="xs"><b>$79.99</b><span>Standard edition. The Ultimate Edition is $99.99 on the PlayStation Store.</span></div><div class="xs"><b>99 on Metacritic</b><span>Critics called it one of the best games ever. Some players reported launch crashes and bugs.</span></div></div></section>
+<section class="xc"><h2>Budget</h2><div class="xg"><div class="xs"><b>Not disclosed</b><span>Rockstar and Take-Two have never published a figure. These numbers are unofficial estimates.</span></div><div class="xs"><b>$1 to 1.5 billion</b><span>Analyst estimates for development alone. Wider guesses reach $2 billion with marketing.</span></div><div class="xs"><b>$3 billion or more</b><span>Fan analyses of Rockstar North salary filings. Treat this one with caution.</span></div><div class="xs"><b>$265 million</b><span>The estimated cost of GTA V, for comparison.</span></div></div></section>
+<section class="xc"><h2>Jason and Lucia</h2><div class="xg"><div class="chr jas"><h3>Jason Duval</h3><em>Ex-Army smuggler</em>Grew up around grifters and worked for drug runners after his military service. He is the one who does most of the legwork.</div><div class="chr luc"><h3>Lucia Caminos</h3><em>Liberty City native, fresh out of prison</em>Dreams of the good life and sees a life of crime with Jason as her way out. She is the series’ first female lead and usually the planner.</div></div><p class="note" style="margin-top:14px">Their partnership drives the story, often compared to Bonnie and Clyde. An easy score goes wrong and pulls them into a conspiracy across the state.</p><div class="chips"><span>Cal Hampton</span><span>Raul Bautista, bank robber</span><span>Brian Heder</span><span>Boobie Ike</span><span>Dre’Quan Priest</span><span>Real Dimez</span></div></section>
+<section class="xc"><h2>The map of Leonida</h2><div class="mapw" id="xmap"><svg class="nm" viewBox="0 0 300 400" role="img" aria-label="Schematic map of the island state of Leonida"><polygon class="rg" data-r="lummox" points="100,40 205,32 225,105 112,112 88,72"/><polygon class="rg" data-r="leonard" points="205,112 255,122 262,195 212,205 196,155"/><polygon class="rg" data-r="kelly" points="62,125 150,118 160,205 80,218 55,170"/><polygon class="rg" data-r="gellhorn" points="32,105 75,110 80,155 45,165"/><polygon class="rg" data-r="vdale" points="188,208 265,202 275,292 202,302 180,252"/><polygon class="rg" data-r="mariana" points="68,228 182,226 202,305 132,340 68,300"/><polygon class="rg" data-r="keys" points="132,345 205,322 210,334 142,364 92,374 58,366 70,352"/><polygon class="rg" data-r="kalaga" points="112,52 162,46 168,88 118,94"/><polygon class="rg" data-r="ambrosia" points="152,120 196,116 198,150 156,152"/><polygon class="rg" data-r="grass" points="80,238 152,238 160,272 96,284"/><polygon class="rg" data-r="vc" points="206,218 252,216 258,266 216,276"/><ellipse class="lake" cx="182" cy="80" rx="20" ry="16" style="pointer-events:none"/><rect x="158" y="224" width="22" height="8" fill="#fff" opacity=".6" style="pointer-events:none"/><g class="rt" font-size="8"><text x="150" y="36">Lummox County</text><text x="140" y="72">Mount Kalaga</text><text x="230" y="160">Leonard County</text><text x="174" y="136">Ambrosia</text><text x="58" y="126">Port Gellhorn</text><text x="104" y="170">Kelly County</text><text x="232" y="250">Vice-Dale County</text><text x="232" y="232">Vice City</text><text x="118" y="258">Grassrivers</text><text x="120" y="312">Mariana County</text><text x="120" y="356">Leonida Keys</text></g></svg>
+<svg hidden viewBox="0 0 400 350" role="img" aria-label="Schematic map of the six regions of Leonida"><polygon class="rg" data-r="ambrosia" points="60,40 220,30 250,90 120,110 50,90"/><polygon class="rg" data-r="kalaga" points="220,30 330,50 340,120 250,120 250,90"/><polygon class="rg" data-r="gellhorn" points="40,100 130,115 140,190 60,200 30,150"/><polygon class="rg" data-r="vc" points="270,130 340,130 350,250 290,260 260,200"/><polygon class="rg" data-r="grass" points="50,210 170,215 190,300 70,320 40,270"/><polygon class="rg" data-r="keys" points="240,290 360,262 372,284 252,322"/><ellipse class="lake" cx="195" cy="165" rx="42" ry="28"/><g class="rt"><text x="135" y="78">Ambrosia</text><text x="290" y="92">Mount Kalaga</text><text x="85" y="158">Port Gellhorn</text><text x="308" y="198">Vice City</text><text x="115" y="268">Grassrivers</text><text x="305" y="306">Leonida Keys</text><text x="195" y="168">Lake Leonida</text></g></svg><div><div class="rls"><button class="rl" data-r="vc">Vice City</button><button class="rl" data-r="keys">Leonida Keys</button><button class="rl" data-r="grass">Grassrivers</button><button class="rl" data-r="gellhorn">Port Gellhorn</button><button class="rl" data-r="ambrosia">Ambrosia</button><button class="rl" data-r="kalaga">Mount Kalaga</button></div><div id="rd"></div><p class="note" style="margin-top:16px">This is my own simplified schematic. Its layout follows a community map and is unverified. Solid chips are Rockstar’s named regions. Dashed chips are county names from that map, not confirmed by Rockstar.</p></div></div></section>
+<p class="note">Compiled from launch coverage as of November 21, 2026. Details may change.</p>
+</div></main>
+<main class="screen" id="sys"><nav class="side2"><h1>System</h1><div id="menu"></div></nav><section class="main2"><button class="back" id="sback">‹ Back</button><div id="pane"></div></section></main>
+<div class="dlg" id="dlg"></div>
+<div class="cursor" id="cursor"><i></i></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const GAMES=[
+{n:"GTA VI",t:"Two leads. One state. One score.",sc:4,g:"linear-gradient(135deg,#ff4fa3,#ff9a4d 60%,#7c5cff)",p:12,e:[6,40]},
+{n:"GTA V",t:"Three lives. One city.",sc:0,g:"linear-gradient(135deg,#43e97b,#0f5132)",p:0,e:[0,27]},
+{n:"Forza Horizon 6",t:"Race the festival.",sc:3,g:"linear-gradient(135deg,#ff9f43,#ee5a24)",p:64,e:[31,48]},
+{n:"God of War",t:"A father. A son. A war.",sc:1,g:"linear-gradient(135deg,#c0392b,#2c3e50)",p:37,e:[14,36]},
+{n:"RC 26",t:"Step up to the crease.",sc:2,g:"linear-gradient(135deg,#00c6ff,#0072ff)",p:81,e:[44,52]},
+{n:"Wolverine",t:"Born for the fight.",sc:6,g:"linear-gradient(135deg,#f9d423,#1e3c72)",p:5,e:[2,30]}
+];
+const S=p=>`<svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const MARKS=[S('<path d="M8 36 24 10 40 36"/><path d="M16 36 24 24 32 36"/>'),S('<path d="M24 6 42 40H6Z"/><path d="M24 20v12"/>'),S('<circle cx="24" cy="24" r="16"/><circle cx="24" cy="24" r="6"/>'),S('<path d="M14 38L21 10M25 40L31 8M36 38L42 12"/>'),S('<path d="M2 20Q9 12 16 20T30 20T44 20"/><path d="M2 32Q9 24 16 32T30 32T44 32"/>'),S('<circle cx="24" cy="24" r="6"/><ellipse cx="24" cy="24" rx="18" ry="8" transform="rotate(-25 24 24)"/>')];
+const MI=[0,2,4,1,5,3];GAMES.forEach((g,i)=>g.m=MARKS[MI[i]]);
+const SYS=[{i:"✦",l:"Explore"},{i:"★",l:"Z+ Premium"},{i:"▶",l:"Z Store"},{i:"🎮",l:"Controllers"},{i:"📷",l:"Captures"}];
+const $=s=>document.querySelector(s);
+const hasLS=(()=>{try{localStorage.setItem("t","1");localStorage.removeItem("t");return true}catch(e){return false}})();
+let users=["Player One"],cur=0,sel=0,gi=0,mem=null;
+try{const s=hasLS&&localStorage.getItem("gzos-users");if(s)users=JSON.parse(s)}catch(e){}
+users=users.map(u=>typeof u==="string"?{n:u}:u);
+const save=()=>{try{hasLS&&localStorage.setItem("gzos-users",JSON.stringify(users))}catch(e){}};
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("on"),2200)};
+setInterval(tick=()=>{$("#clock").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})},1000);tick();
+
+function drawUsers(){
+  const box=$("#users");box.innerHTML="";
+  users.forEach((u,i)=>{
+    const b=document.createElement("button");b.className="user"+(i===sel?" sel":"");
+    b.innerHTML=`<div class="ring">${av(u)}</div><div class="name">${esc(u.n)}</div><div class="opt">✎ Edit profile</div>`;
+    b.onclick=e=>{sel=i;if(e.target.closest(".opt")){mark();editProfile(i)}else login(i)};b.onfocus=()=>{sel=i;mark()};box.append(b);
+  });
+  const a=document.createElement("button");a.className="user"+(sel===users.length?" sel":"");
+  a.innerHTML=`<div class="ring"><div class="av add">+</div></div><div class="name">Add user</div>`;
+  a.onclick=()=>{sel=users.length;mark();$("#adder").classList.add("on");$("#newName").focus()};box.append(a);
+}
+function mark(){[...document.querySelectorAll(".user")].forEach((el,i)=>el.classList.toggle("sel",i===sel))}
+function login(i){
+  cur=i;setMe(i);
+  sfx("login");cineBars("Welcome, "+users[i].n);const lg=$("#login");lg.classList.add("leaving");setTimeout(()=>{lg.classList.remove("on","leaving");$("#home").classList.add("on","enter");drawShelf();pick(0);toast("Signed in as "+users[i].n)},750);
+}
+$("#create").onclick=()=>{
+  const v=$("#newName").value.trim();if(!v){toast("Enter a gamertag to continue");return}
+  users.push({n:v});save();$("#newName").value="";$("#adder").classList.remove("on");sel=users.length-1;drawUsers();toast("Created "+v);
+};
+$("#newName").onkeydown=e=>{if(e.key==="Enter")$("#create").click();e.stopPropagation()};
+$("#power").onclick=()=>toast("Power options: sleep, restart, shut down");
+
+function drawShelf(){
+  const s=$("#shelf");s.innerHTML="";
+  GAMES.forEach((g,i)=>{const t=document.createElement("button");t.className="tile game";t.style.setProperty("--g",g.g);t.setAttribute("aria-label",g.n);t.innerHTML=g.m;t.onclick=()=>pick(i);t.dataset.i=i;s.append(t)});
+  SYS.forEach(x=>{const t=document.createElement("button");t.className="tile";t.setAttribute("aria-label",x.l);t.textContent=x.i;t.onclick=()=>x.l==="Explore"?openExp():toast(x.l+" is coming soon");s.append(t)});
+}
+function pick(i){
+  gi=(i+GAMES.length)%GAMES.length;const g=GAMES[gi];
+  document.querySelectorAll(".tile.game").forEach((t,k)=>t.classList.toggle("on",k===gi));
+  $("#emb").innerHTML=g.m;$("#cemb").innerHTML=g.m;$("#tl").textContent=g.n;drawArt(g);cine();$("#gtag").textContent=g.t;$("#cv").textContent=g.n;
+  $("#cover").style.setProperty("--g",g.g);$("#prog").textContent=g.p+"%";$("#earn").textContent=g.e[0]+"/"+g.e[1];
+  $("#bg").style.background=`radial-gradient(1200px 600px at 20% -10%,${g.g.match(/#\w{6}/g)[0]}77,transparent 60%),radial-gradient(900px 500px at 90% 110%,${g.g.match(/#\w{6}/g)[1]}55,transparent 60%),var(--bg)`;
+  const el=document.querySelector(`.tile.game[data-i="${gi}"]`);if(el)el.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
+}
+$("#play").onclick=()=>{const g=GAMES[gi],L=$("#launch");sfx("launch");$("#lemb").innerHTML=g.m;$("#ltitle").textContent=g.n;L.classList.add("on");setTimeout(()=>{L.classList.remove("on");toast(g.pc?g.n+" was found on your PC ("+g.pc+"). Starting it needs the native GamezOS app, because browsers can’t run programs.":g.n+" is a demo tile. Scan your PC in Settings to see your real games.")},2600)};
+$("#more").onclick=()=>artDlg();
+$("#search").onclick=()=>searchDlg();
+$("#settings").onclick=()=>openSys();
+$("#me").onclick=()=>{$("#home").classList.remove("on");const L=$("#login");L.classList.remove("enter");void L.offsetWidth;L.classList.add("on","enter");cineBars("Switch profile");$("#bg").style.background="";drawUsers();toast("Signed out "+users[cur].n)};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));if(t.dataset.tab==="media")toast("Media apps are coming soon")});
+document.addEventListener("keydown",e=>{
+  if($("#exp").classList.contains("on")){if(e.key==="Escape")closeExp();return}
+  if($("#sys").classList.contains("on")){if(e.key==="Escape"&&!$("#dlg").classList.contains("on"))closeSys();else if($("#dlg").classList.contains("on")&&e.key==="Escape")closeDlg();return}
+  if($("#dlg").classList.contains("on")){if(e.key==="Escape")closeDlg();return}
+  if(document.activeElement&&document.activeElement.tagName==="INPUT")return;
+  const inLogin=$("#login").classList.contains("on");
+  if(inLogin){
+    if(e.key==="ArrowRight"){sel=Math.min(sel+1,users.length);mark()}
+    if(e.key==="ArrowLeft"){sel=Math.max(sel-1,0);mark()}
+    if(e.key==="Enter"){e.preventDefault();sel<users.length?login(sel):document.querySelector(".user:last-child").click()}
+  }else{
+    if(e.key==="ArrowRight"){sfx("move");pick(gi+1)}
+    if(e.key==="ArrowLeft"){sfx("move");pick(gi-1)}
+    if(e.key==="Enter"&&document.activeElement.tagName!=="BUTTON")$("#play").click();
+    if(e.key==="Escape")$("#me").click();
+  }
+});
+let AC;
+function sfx(k){try{if(window.MUTE)return;AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();const n=AC.currentTime,P={tick:[[1400,0,.03,.03]],move:[[600,0,.05,.05]],click:[[880,0,.07,.07],[1320,.05,.09,.07]],login:[[523,0,.2,.12],[659,.12,.2,.12],[784,.24,.45,.12]],launch:[[196,0,.9,.1],[392,.15,.9,.08],[784,.45,.6,.08]]};(P[k]||[]).forEach(([f0,s,d,v])=>{const f=f0*(window.PIT||1),o=AC.createOscillator(),g=AC.createGain();o.type=k==="launch"?"sawtooth":"sine";o.frequency.setValueAtTime(f,n+s);if(k==="launch")o.frequency.exponentialRampToValueAtTime(f*2,n+s+d);g.gain.setValueAtTime(v,n+s);g.gain.exponentialRampToValueAtTime(.0001,n+s+d);o.connect(g);g.connect(AC.destination);o.start(n+s);o.stop(n+s+d)})}catch(e){}}
+const cu=$("#cursor");
+addEventListener("mousemove",e=>{cu.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;cu.classList.add("show");cu.classList.toggle("point",!!e.target.closest("button,input"))});
+addEventListener("mousedown",e=>{cu.classList.add("down");const r=document.createElement("b");r.className="rip";r.style.left=e.clientX+"px";r.style.top=e.clientY+"px";document.body.append(r);setTimeout(()=>r.remove(),600);sfx("click")});
+addEventListener("mouseup",()=>cu.classList.remove("down"));
+document.addEventListener("mouseover",e=>{const b=e.target.closest("button");if(b&&!(e.relatedTarget&&b.contains(e.relatedTarget)))sfx("tick")});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const GR=["conic-gradient(from 200deg,#7c5cff,#ff4fa3,#2fd8ff,#7c5cff)","linear-gradient(135deg,#ffb347,#ff5e62)","linear-gradient(135deg,#00c6ff,#0072ff)","linear-gradient(135deg,#43e97b,#38f9d7)","linear-gradient(135deg,#a18cd1,#fbc2eb)"];
+const av=u=>u.img?`<div class="av" style="background:url('${u.img}') center/cover"></div>`:`<div class="av" style="background:${GR[u.c||0]}">${esc(u.n[0].toUpperCase())}</div>`;
+function setMe(i){const u=users[i],m=$("#me");m.style.background=u.img?`url('${u.img}') center/cover`:GR[u.c||0];m.textContent=u.img?"":u.n[0].toUpperCase()}
+function openDlg(h){const d=$("#dlg");d.innerHTML=`<div class="panel">${h}</div>`;d.classList.add("on")}
+function closeDlg(){$("#dlg").classList.remove("on")}
+function editProfile(i){
+  const u=users[i];let img=u.img||null,c=u.c||0;
+  openDlg(`<h2>Edit profile</h2><div class="pv ring"></div><label class="lb">Gamertag<input id="pn" maxlength="14"></label><div class="sw" id="sw"></div><div class="row"><button class="b2" id="up">Upload picture</button><button class="b2" id="rm">Remove picture</button></div><div class="row"><button class="b2" id="cx">Cancel</button><button class="b1" id="sv">Save</button></div><input type="file" id="pf" accept="image/*" hidden>`);
+  $("#pn").value=u.n;
+  const draw=()=>{$(".pv").innerHTML=av({n:$("#pn").value||"?",img,c});$("#sw").innerHTML=GR.map((g,k)=>`<button class="dot${!img&&k===c?" on":""}" data-k="${k}" style="background:${g}" aria-label="Color ${k+1}"></button>`).join("")};
+  draw();
+  $("#sw").onclick=e=>{const b=e.target.closest(".dot");if(b){c=+b.dataset.k;img=null;draw()}};
+  $("#pn").oninput=draw;
+  $("#up").onclick=()=>$("#pf").click();
+  $("#rm").onclick=()=>{img=null;draw()};
+  $("#pf").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),cv=document.createElement("canvas");cv.width=cv.height=160;cv.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,160,160);img=cv.toDataURL("image/jpeg",.85);draw()};im.src=r.result};r.readAsDataURL(f)};
+  $("#cx").onclick=closeDlg;
+  $("#sv").onclick=()=>{const n=$("#pn").value.trim();if(!n){toast("Enter a gamertag to continue");return}users[i]={n,img,c};save();closeDlg();drawUsers();mark();if($("#home").classList.contains("on"))setMe(i);toast("Profile saved")};
+}
+function settingsMenu(){
+  openDlg(`<h2>Settings</h2><div class="col"><button class="b2" id="s1">Edit profile</button><button class="b2" id="s2">Scan this PC for games</button><button class="b2" id="s3">Close</button></div>`);
+  $("#s1").onclick=()=>{closeDlg();editProfile(cur)};$("#s2").onclick=scanDlg;$("#s3").onclick=closeDlg;
+}
+const isExe=n=>/\.(exe|appimage|x86_64|sh|app)$/i.test(n)&&!/unins|setup|redist|crash|install|update|vc_|dxsetup/i.test(n);
+async function findExe(dir,d){for await(const [n,h] of dir.entries()){if(h.kind==="file"&&isExe(n))return n}if(d>0)for await(const [n,h] of dir.entries()){if(h.kind==="directory"){const r=await findExe(h,d-1);if(r)return r}}return null}
+async function scanHandle(root){const out=[];for await(const [n,h] of root.entries()){if(h.kind!=="directory")continue;const x=await findExe(h,2);if(x)out.push({n,exe:x})}return out}
+function scanFiles(list){const m={};for(const f of list){const p=(f.webkitRelativePath||"").split("/");if(p.length<3||p.length>5)continue;if(isExe(p[p.length-1])&&!m[p[1]])m[p[1]]=p[p.length-1]}return Object.entries(m).map(([n,exe])=>({n,exe}))}
+const hx=(h,s,l)=>{s/=100;l/=100;const a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(Math.min(k-3,9-k,1),-1))).toString(16).padStart(2,"0")};return"#"+f(0)+f(8)+f(4)};
+const mkGame=x=>{let h=0;for(const ch of x.n)h=(h*31+ch.charCodeAt(0))%360;return{n:x.n,t:"Found on this PC",g:`linear-gradient(135deg,${hx(h,80,60)},${hx((h+50)%360,75,45)})`,p:0,e:[0,0],pc:x.exe,m:S(`<text x="24" y="34" text-anchor="middle" font-size="28" font-weight="800" fill="#fff" stroke="none">${esc(x.n[0].toUpperCase())}</text>`)}};
+function scanDone(list){
+  if(!list.length){$("#st").textContent="No games found. Choose the folder that contains your game folders.";return}
+  list.sort((a,b)=>a.n.localeCompare(b.n));
+  GAMES.splice(0,GAMES.length,...list.map(mkGame));
+  try{hasLS&&localStorage.setItem("gzos-lib",JSON.stringify(list))}catch(e){}
+  closeDlg();drawShelf();pick(0);toast(list.length+" games found on this PC");
+}
+function scanDlg(){
+  openDlg(`<h2>Scan for games</h2><p class="sub">Choose a folder that holds your game folders, such as Steam’s steamapps/common, Epic Games, or a Games folder. GamezOS reads folder names and program files only. Nothing is uploaded.</p><div class="col"><button class="b1" id="pk">Choose folder</button><button class="b2" id="cl">Cancel</button></div><p class="sub" id="st"></p><input type="file" id="fl" webkitdirectory multiple hidden>`);
+  $("#cl").onclick=closeDlg;
+  $("#fl").onchange=e=>{$("#st").textContent="Scanning…";scanDone(scanFiles([...e.target.files]))};
+  $("#pk").onclick=async()=>{
+    if(window.showDirectoryPicker){try{const h=await showDirectoryPicker();$("#st").textContent="Scanning…";scanDone(await scanHandle(h));return}catch(err){if(err&&err.name==="AbortError")return}}
+    $("#fl").click();
+  };
+}
+try{const l=hasLS&&localStorage.getItem("gzos-lib");if(l){const a=JSON.parse(l);if(a.length)GAMES.splice(0,GAMES.length,...a.map(mkGame))}}catch(e){}
+const THEMES=[
+{n:"Default",a:"#7c5cff",b:"#ff4fa3",c:"#2fd8ff",bg:"#070a1a",p:1},
+{n:"Aurora",a:"#1fd1a5",b:"#2f9bff",c:"#b6ff6a",bg:"#04131a",p:1.12},
+{n:"Ember",a:"#ff7a3d",b:"#ff3d6e",c:"#ffd166",bg:"#170a0a",p:.85},
+{n:"Retro Z",a:"#f5c542",b:"#e4572e",c:"#76b041",bg:"#14110a",p:.7},
+{n:"Mono",a:"#cfd3e6",b:"#8e94b3",c:"#ffffff",bg:"#0b0b0e",p:1}];
+let theme=0;try{const t=hasLS&&localStorage.getItem("gzos-theme");if(t)theme=Math.min(+t||0,THEMES.length-1)}catch(e){}
+const setVars=(el,t)=>{el.style.setProperty("--a",t.a);el.style.setProperty("--b",t.b);el.style.setProperty("--c",t.c);el.style.setProperty("--bg",t.bg)};
+function applyTheme(i){theme=i;setVars(document.documentElement,THEMES[i]);window.PIT=THEMES[i].p;try{hasLS&&localStorage.setItem("gzos-theme",i)}catch(e){}}
+const MENU=["Profile","Game library","Sound","Language","Date and time","Power saving","Appearance","Web browser","About"];
+const head=(t,d)=>`<div class="ph"><div><h2>${t}</h2><p>${d}</p></div></div>`;
+const rw=(l,v)=>`<div class="rw"><span>${l}</span><span>${v}</span></div>`;
+function openSys(){$("#sys").classList.add("on");sysPage(6)}
+function closeSys(){$("#sys").classList.remove("on")}
+function sysPage(k){
+  $("#menu").innerHTML=MENU.map((m,i)=>`<button class="mi${i===k?" on":""}" data-k="${i}">${m}</button>`).join("");
+  const m=$("#pane");
+  if(k===6){
+    m.innerHTML=`<div class="ph"><div><h2>Appearance and sound</h2><p>Select a design to apply to your home screen and other areas of GamezOS. Each design has its own colors and sound effects.</p></div><div class="dd"><button class="ddb" id="ddb"><span>${THEMES[theme].n}</span><span>▾</span></button><div class="ddl" id="ddl">${THEMES.map((t,i)=>`<button data-i="${i}"${i===theme?' class="cur"':""}>${t.n}</button>`).join("")}</div></div></div><div class="pvw" id="pvw"><div class="pp h"><span class="pc">12:00</span><div class="pt"><b></b><b></b><b></b><b></b><b></b></div><div class="pn">Neon Drift</div></div><div class="pp s"><div class="pn">Settings</div><i class="ln"></i><i class="ln on"></i><i class="ln"></i><i class="ln"></i><i class="ln"></i></div></div>`;
+    setVars($("#pvw"),THEMES[theme]);
+    const dl=$("#ddl"),pv=e=>{const b=e.target.closest("button");if(b)setVars($("#pvw"),THEMES[+b.dataset.i])};
+    $("#ddb").onclick=()=>dl.classList.toggle("on");
+    dl.onmouseover=pv;dl.onfocusin=pv;dl.onmouseleave=()=>setVars($("#pvw"),THEMES[theme]);
+    dl.onclick=e=>{const b=e.target.closest("button");if(!b)return;applyTheme(+b.dataset.i);sysPage(6);sfx("login");toast(THEMES[theme].n+" design applied")};
+  }else if(k===0){
+    m.innerHTML=head("Profile","Change your gamertag and picture.")+`<div class="col2"><button class="b2" id="go">Edit profile</button></div>`;$("#go").onclick=()=>editProfile(cur);
+  }else if(k===1){
+    m.innerHTML=head("Game library","Find the games installed on this PC.")+rw("Games found",GAMES.some(g=>g.pc)?GAMES.length:"None yet")+`<div class="col2"><button class="b2" id="go">Scan this PC for games</button></div>`;$("#go").onclick=scanDlg;
+  }else if(k===2){
+    m.innerHTML=head("Sound","Turn menu sounds on or off. Pitch follows your chosen design.")+`<div class="col2"><button class="b2" id="go">Sound effects: ${window.MUTE?"Off":"On"}</button></div>`;$("#go").onclick=()=>{window.MUTE=!window.MUTE;sysPage(2)};
+  }else if(k===3){m.innerHTML=head("Language","Choose how GamezOS shows text.")+rw("System language","English")+rw("Keyboard","English (US)");
+  }else if(k===4){m.innerHTML=head("Date and time","Used for the clock and trophy dates.")+rw("Now",new Date().toLocaleString())+rw("Time zone",Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }else if(k===5){m.innerHTML=head("Power saving","Set when GamezOS rests to save power.")+rw("Rest mode","After 20 minutes")+rw("Turn off controllers","After 30 minutes");
+  }else if(k===7){m.innerHTML=head("Web browser","Browse the web from GamezOS.")+rw("Home page","about:blank")+rw("Cookies","Allowed");
+  }else if(k===9){artPage(m)}else{m.innerHTML=head("About","GamezOS system information.")+rw("Version","0.4 prototype")+rw("Users",users.length)+rw("Games",GAMES.length)}
+}
+$("#menu").onclick=e=>{const b=e.target.closest(".mi");if(b)sysPage(+b.dataset.k)};
+$("#sback").onclick=closeSys;
+document.addEventListener("click",e=>{if(!e.target.closest(".dd")){const l=$("#ddl");l&&l.classList.remove("on")}});
+const REG=[
+{k:"vc",n:"Vice City",d:"Art deco beachfronts, nightlife strips, a glass-tower downtown, canals, and a busy cruise port. A tram connects to the airport."},
+{k:"keys",n:"Leonida Keys",d:"Bridge-linked tropical islands in the south. Jason and Lucia’s starting apartment is here."},
+{k:"grass",n:"Grassrivers",d:"Southwest wetlands where airboats are built for the shallow swamp."},
+{k:"gellhorn",n:"Port Gellhorn",d:"One of the six named regions. Players are still mapping what it holds."},
+{k:"ambrosia",n:"Ambrosia",d:"One of the six named regions. Players are still mapping what it holds."},
+{k:"kalaga",n:"Mount Kalaga National Park",d:"Backcountry wilderness with hunting and plenty of strange characters."}];
+function mapSel(k){document.querySelectorAll("#xmap [data-r]").forEach(e=>e.classList.toggle("on",e.dataset.r===k));const r=REG.find(x=>x.k===k);$("#rd").innerHTML=`<b>${r.n}</b><p>${r.d}</p>`}
+function openExp(){$("#exp").classList.add("on");$("#exp").scrollTop=0;mapSel("vc")}
+function closeExp(){$("#exp").classList.remove("on")}
+$("#xmap").onclick=e=>{const g=e.target.closest("[data-r]");if(g)mapSel(g.dataset.r)};
+function searchDlg(){
+  openDlg(`<h2>Search games</h2><label class="lb">Game name<input id="sq" placeholder="Type a game name" autocomplete="off"></label><div class="col" id="sr"></div>`);
+  const run=()=>{const q=$("#sq").value.trim().toLowerCase(),box=$("#sr");box.innerHTML="";if(!q)return;
+    const items=GAMES.map((g,i)=>({g,i})).filter(x=>x.g.n.toLowerCase().includes(q)).map(x=>`<button class="b2 sri" data-i="${x.i}">${esc(x.g.n)}<br><small>${x.g.pc?"Installed on this PC":"In your library"}</small></button>`);
+    if(["grand theft auto vi","gta vi","gta 6","gta6"].some(s=>s.includes(q)))items.push(`<button class="b2 sri" data-x="gta">GTA VI details<br><small>Release, budget, characters, and map</small></button>`);
+    box.innerHTML=items.length?items.join(""):`<p class="nf">NO GAME FOUND</p>`};
+  $("#sq").oninput=run;
+  $("#sq").onkeydown=e=>{if(e.key==="Enter"){const b=document.querySelector("#sr .sri");if(b)b.click()}};
+  $("#sr").onclick=e=>{const b=e.target.closest(".sri");if(!b)return;closeDlg();if(b.dataset.x)openExp();else pick(+b.dataset.i)};
+  $("#sq").focus();
+}
+const PR=["$79.99","In your library","In your library","In your library","In your library","In your library"];
+const SC=[
+'<g fill="#0a0620" opacity=".85"><rect x="20" y="170" width="70" height="230"/><rect x="100" y="120" width="60" height="280"/><rect x="170" y="190" width="80" height="210"/><rect x="560" y="140" width="70" height="260"/><rect x="640" y="90" width="60" height="310"/><rect x="710" y="180" width="90" height="220"/></g><circle cx="400" cy="200" r="70" fill="var(--c2)" opacity=".35"/><path d="M330 400L470 400L420 240L380 240Z" fill="#05030f" opacity=".6"/><path d="M345 400L392 240M455 400L408 240M400 400V300" stroke="var(--c2)" stroke-width="3"/>',
+'<circle cx="560" cy="130" r="60" fill="var(--c2)" opacity=".5"/><path d="M0 400L170 190L280 300L450 130L620 320L800 210V400Z" fill="#14122e" opacity=".85"/><path d="M450 130L500 205L430 190Z" fill="#fff" opacity=".25"/><path d="M520 70L560 30L600 70L580 90H540Z" fill="var(--c1)" opacity=".8"/>',
+'<g fill="none" stroke="var(--c2)" stroke-width="3" opacity=".55"><circle cx="560" cy="230" r="50"/><circle cx="560" cy="230" r="110"/><circle cx="560" cy="230" r="180"/><circle cx="560" cy="230" r="260"/></g><path d="M0 400V320Q200 280 400 330T800 320V400Z" fill="#07101a" opacity=".85"/><path d="M560 0V400M300 230H800" stroke="var(--c1)" stroke-opacity=".35" stroke-width="2"/>',
+'<circle cx="600" cy="150" r="80" fill="var(--c2)" opacity=".6"/><path d="M0 400V300Q100 220 180 300Q260 180 340 300Q430 200 520 310Q620 190 700 300Q760 240 800 290V400Z" fill="var(--c1)" opacity=".75"/><path d="M0 400V340Q150 300 300 350T600 340T800 350V400Z" fill="#190807"/>',
+'<circle cx="640" cy="110" r="50" fill="#fff" opacity=".4"/><path d="M0 250Q100 210 200 250T400 250T600 250T800 250V400H0Z" fill="var(--c2)" opacity=".5"/><path d="M0 300Q100 260 200 300T400 300T600 300T800 300V400H0Z" fill="var(--c1)" opacity=".7"/><path d="M0 350Q100 320 200 350T400 350T600 350T800 350V400H0Z" fill="#04162e"/><path d="M470 250H560L545 275H485ZM515 250V190L560 245Z" fill="#06142a"/>',
+'<g fill="#fff" opacity=".7"><circle cx="90" cy="60" r="2"/><circle cx="250" cy="120" r="1.5"/><circle cx="700" cy="50" r="2"/><circle cx="420" cy="40" r="1.5"/><circle cx="760" cy="260" r="2"/></g><circle cx="560" cy="210" r="100" fill="var(--c2)" opacity=".7"/><ellipse cx="560" cy="210" rx="210" ry="40" fill="none" stroke="var(--c1)" stroke-width="8" transform="rotate(-18 560 210)" opacity=".85"/><circle cx="300" cy="330" r="30" fill="var(--c1)" opacity=".6"/>',
+'<path d="M300 400L520 0H640L420 400Z" fill="var(--c2)" opacity=".35"/><path d="M460 400L680 0H760L540 400Z" fill="var(--c1)" opacity=".45"/>'];
+let MEMART={};try{const s=hasLS&&localStorage.getItem("gzos-art");if(s)MEMART=JSON.parse(s)}catch(e){}
+const getArt=()=>MEMART;
+function setArt(a){MEMART=a;try{hasLS&&localStorage.setItem("gzos-art",JSON.stringify(a));return true}catch(e){return false}}
+function wm(g){const w=g.n.split(" ");return w.length>1?`<span class="w1">${esc(w.slice(0,-1).join(" "))}</span><span class="w2">${esc(w[w.length-1])}</span>`:`<span class="w2">${esc(g.n)}</span>`}
+function sceneSvg(g){return `<svg viewBox="0 0 800 400" preserveAspectRatio="xMaxYMax slice" style="width:100%;height:100%"><defs><linearGradient id="bgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--c1)"/><stop offset="1" style="stop-color:var(--bg)"/></linearGradient></defs><rect width="800" height="400" fill="url(#bgG)"/>${SC[g.pc?6:(g.sc??Math.min(gi,5))]}</svg>`}
+function drawArt(g){
+  const c=g.g.match(/#\w{6}/g)||["#7c5cff","#ff4fa3"],art=getArt()[g.n]||{},H=$("#home"),el=$("#gbg");
+  H.style.setProperty("--c1",c[0]);H.style.setProperty("--c2",c[1]||c[0]);
+  if(art.bg){el.innerHTML="";el.style.background=`url('${art.bg}') center/cover`}else{el.style.background="";el.innerHTML=sceneSvg(g)}
+  document.querySelector(".lockup").innerHTML=art.logo?`<img class="clogo" src="${art.logo}" alt="${esc(g.n)} logo">`:`<span class="emb" id="emb">${g.m}</span><div class="logo" id="gt">${wm(g)}</div>`;
+  $("#price").textContent=g.pc?"Installed on this PC":(PR[gi]||"$59.99");
+}
+function artDlg(){
+  const g=GAMES[gi];let kind="";
+  openDlg(`<h2>${esc(g.n)} artwork</h2><p class="sub">Use official or custom images that you own. They stay in this browser.</p><div class="col"><button class="b2" id="ab">Use my own background</button><button class="b2" id="al">Use my own logo</button><button class="b2" id="ar">Reset artwork</button><button class="b2" id="ax">Close</button></div><input type="file" id="af" accept="image/*" hidden>`);
+  const f=$("#af");
+  $("#ab").onclick=()=>{kind="bg";f.click()};$("#al").onclick=()=>{kind="logo";f.click()};
+  $("#ar").onclick=()=>{const a=getArt();delete a[g.n];setArt(a);closeDlg();pick(gi);toast("Artwork reset")};
+  $("#ax").onclick=closeDlg;
+  f.onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const w=Math.min(kind==="bg"?1600:420,im.width),cv=document.createElement("canvas");cv.width=w;cv.height=Math.round(im.height*w/im.width);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);const u=kind==="bg"?cv.toDataURL("image/jpeg",.85):cv.toDataURL("image/png");const a=getArt();(a[g.n]=a[g.n]||{})[kind]=u;if(!setArt(a))toast("Applied for this session only");closeDlg();pick(gi)};im.src=r.result};r.readAsDataURL(file)};
+}
+function cine(){const h=$("#home");h.classList.remove("cin");void h.offsetWidth;h.classList.add("cin")}
+let cinT;function cineBars(t){const o=$("#cinov");$("#cint").textContent=t||"";o.classList.remove("on");void o.offsetWidth;o.classList.add("on");clearTimeout(cinT);cinT=setTimeout(()=>o.classList.remove("on"),1700)}
+MENU.push("Artwork");
+function saveArtFile(file,name,kind,done){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const w=Math.min(kind==="bg"?1600:420,im.width),cv=document.createElement("canvas");cv.width=w;cv.height=Math.round(im.height*w/im.width);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);const u=kind==="bg"?cv.toDataURL("image/jpeg",.85):cv.toDataURL("image/png");const a=getArt();(a[name]=a[name]||{})[kind]=u;if(!setArt(a))toast("Applied for this session only");done()};im.src=r.result};r.readAsDataURL(file)}
+function artPage(m){
+  m.innerHTML=head("Artwork","Add logos and backgrounds that you own for each game. Transparent PNG logos look best. Images stay in this browser and are never uploaded.")+GAMES.map((g,i)=>{const a=getArt()[g.n]||{};return `<div class="rw"><span>${esc(g.n)}</span><span><button class="b2 ab" data-i="${i}" data-k="logo">${a.logo?"Change logo":"Add logo"}</button> <button class="b2 ab" data-i="${i}" data-k="bg">${a.bg?"Change background":"Add background"}</button></span></div>`}).join("")+`<div class="col2"><button class="b2" id="agr">Reset all artwork</button></div><input type="file" id="agf" accept="image/*" hidden>`;
+  let tg=null;const f=$("#agf");
+  m.onclick=e=>{const b=e.target.closest(".ab");if(b){tg={i:+b.dataset.i,k:b.dataset.k};f.click()}};
+  $("#agr").onclick=()=>{setArt({});artPage(m);if(GAMES[gi])pick(gi);toast("All artwork reset")};
+  f.onchange=e=>{const file=e.target.files[0];if(!file||!tg)return;saveArtFile(file,GAMES[tg.i].n,tg.k,()=>{artPage(m);pick(gi);toast("Artwork saved for "+GAMES[tg.i].n)})};
+}
+$("#xback").onclick=closeExp;
+REG.push({k:"lummox",n:"Lummox County",d:"A northern county on the community map you shared. Rockstar hasn’t confirmed it."},{k:"leonard",n:"Leonard County",d:"A northeastern county on the community map. Unconfirmed."},{k:"kelly",n:"Kelly County",d:"A west-central county on the community map. Unconfirmed."},{k:"vdale",n:"Vice-Dale County",d:"The southeastern county around Vice City, with Vice Beach and the airport, on the community map. Unconfirmed."},{k:"mariana",n:"Mariana County",d:"A southern county on the community map, north of the Keys. Unconfirmed."});
+document.querySelector(".rls").insertAdjacentHTML("beforeend","<button class='rl alt' data-r='lummox'>Lummox</button><button class='rl alt' data-r='leonard'>Leonard</button><button class='rl alt' data-r='kelly'>Kelly</button><button class='rl alt' data-r='vdale'>Vice-Dale</button><button class='rl alt' data-r='mariana'>Mariana</button><button class='rl alt' id='xmb'>Use my map image</button>");
+function applyXmap(u){let im=$("#xmi");const nm=document.querySelector("#xmap .nm");if(!u){if(im)im.remove();nm.style.display="";return}if(!im){im=new Image();im.id="xmi";im.alt="Your Leonida map";$("#xmap").prepend(im)}im.src=u;nm.style.display="none"}
+const xmf=document.createElement("input");xmf.type="file";xmf.accept="image/*";xmf.hidden=true;document.body.append(xmf);
+$("#xmb").onclick=()=>xmf.click();
+xmf.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const w=Math.min(1400,im.width),cv=document.createElement("canvas");cv.width=w;cv.height=Math.round(im.height*w/im.width);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);const u=cv.toDataURL("image/jpeg",.85);applyXmap(u);try{hasLS&&localStorage.setItem("gzos-xmap",u)}catch(err){toast("Map applied for this session only")}};im.src=r.result};r.readAsDataURL(f)};
+try{const u=hasLS&&localStorage.getItem("gzos-xmap");if(u)applyXmap(u)}catch(e){}
+function applyXbg(u){const h=document.querySelector(".xhero");h.style.background=u?`url('${u}') center/cover`:"";document.querySelector(".scene").style.display=u?"none":""}
+$("#xbg").onclick=()=>$("#xf").click();
+$("#xrs").onclick=()=>{applyXbg(null);try{hasLS&&localStorage.removeItem("gzos-xbg")}catch(e){}toast("Original art restored")};
+$("#xf").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const w=Math.min(1600,im.width),cv=document.createElement("canvas");cv.width=w;cv.height=Math.round(im.height*w/im.width);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);const u=cv.toDataURL("image/jpeg",.85);applyXbg(u);try{hasLS&&localStorage.setItem("gzos-xbg",u)}catch(err){toast("Image applied for this session only")}};im.src=r.result};r.readAsDataURL(f)};
+try{const u=hasLS&&localStorage.getItem("gzos-xbg");if(u)applyXbg(u)}catch(e){}
+applyTheme(theme);
+drawUsers();
+</script>
+</body>
+</html>
